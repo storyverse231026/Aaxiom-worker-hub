@@ -1,0 +1,12 @@
+{
+  "_comment": "Copy to ~/.axiom-worker-hub/seed.json (NOT into the repo) before the first run to pre-load a project. Only used when the database has no projects yet.",
+  "projects": [
+    {
+      "name": "Example project",
+      "instructions": "Write your private project rules here, in your local seed.json or in the app.",
+      "memory": [
+        {"kind": "decision", "title": "Example decision", "body": "Example memory item."}
+      ]
+    }
+  ]
+}

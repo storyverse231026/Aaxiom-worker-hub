@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Axiom Worker Hub</title>
+<script>
+(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='light'}})();
+</script>
+<style>
+:root{--bg:#fff;--fg:#000;--mut:#6b6b6b;--line:#e4e4e4;--card:#fafafa;--r:10px}
+[data-theme=dark]{--bg:#000;--fg:#fff;--mut:#9a9a9a;--line:#262626;--card:#0b0b0b}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
+a{color:inherit}
+h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:0 0 6px}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:34px 0 12px}
+h3{font-size:16px;margin:0 0 6px;font-weight:600}
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+nav{border-right:1px solid var(--line);padding:26px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+nav .brand{font-weight:700;letter-spacing:.04em;margin-bottom:18px}
+nav a{padding:9px 12px;border-radius:8px;text-decoration:none;color:var(--mut)}
+nav a.on,nav a:hover{background:var(--fg);color:var(--bg)}
+nav .sp{flex:1}
+main{padding:34px 40px 80px;max-width:1200px;width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.sb{justify-content:space-between}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.tile{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--card)}
+.tile b{font-size:28px;font-weight:600;display:block;letter-spacing:-.02em}
+.tile span{color:var(--mut);font-size:12px}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--card)}
+.card.link{cursor:pointer;transition:border-color .15s}
+.card.link:hover{border-color:var(--fg)}
+.mut{color:var(--mut)}
+.small{font-size:12.5px}
+button,.btn{font:inherit;font-size:13.5px;border:1px solid var(--fg);background:var(--bg);color:var(--fg);padding:7px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,.btn:hover{background:var(--fg);color:var(--bg)}
+button.pri{background:var(--fg);color:var(--bg)}
+button.pri:hover{opacity:.82}
+button.ghost{border-color:var(--line)}
+button.ghost:hover{border-color:var(--fg);background:var(--bg);color:var(--fg)}
+button.danger{border-style:dashed}
+input,select,textarea{font:inherit;font-size:14px;width:100%;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--fg)}
+input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--fg)}
+textarea{resize:vertical;min-height:90px}
+label{display:block;font-size:12px;color:var(--mut);margin:12px 0 4px}
+label.inline{display:flex;gap:8px;align-items:center;color:var(--fg);font-size:14px;margin:6px 0}
+form .row>*{flex:1;min-width:140px}
+.badge{display:inline-block;font-size:11.5px;padding:2px 9px;border:1px solid var(--fg);border-radius:99px;white-space:nowrap}
+.b-Completed,.b-submitted{background:var(--fg);color:var(--bg)}
+.b-Blocked,.b-cancelled{border-style:dashed;color:var(--mut);border-color:var(--mut)}
+.b-Rejected{text-decoration:line-through;color:var(--mut);border-color:var(--mut)}
+.b-Backlog,.b-awaiting{border-color:var(--line);color:var(--mut)}
+.b-Owner\ Approval{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--fg)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--fg);margin-right:6px}
+.dot.on{background:var(--fg)}
+pre,.body{white-space:pre-wrap;word-wrap:break-word;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0}
+.body{font-family:inherit;font-size:14px}
+.cols{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+details{margin:8px 0}
+summary{cursor:pointer;color:var(--mut);font-size:13px}
+.list>div{padding:11px 0;border-bottom:1px solid var(--line)}
+.list>div:last-child{border:none}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9;max-width:90vw}
+.filters button{border-color:var(--line);padding:5px 12px}
+.filters button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+@media(max-width:820px){
+ .shell{display:block}
+ nav{position:static;height:auto;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line);padding:12px;gap:2px}
+ nav .brand{width:100%;margin:0 0 6px}
+ nav .sp{display:none}
+ nav a{padding:7px 10px}
+ main{padding:20px 16px 70px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+ <nav id="nav"></nav>
+ <main id="main">Loading…</main>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(method, url, body) {
+  const r = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+async function copyText(text) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;top:0;opacity:0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove(); return ok;
+}
+const fmt = ts => ts ? new Date(ts).toLocaleString([], {dateStyle:'medium', timeStyle:'short'}) : '';
+const badge = s => `<span class="badge b-${esc(s)}">${esc(s)}</span>`;
+
+let META = {}, PROJECTS = [], WORKERS = [];
+let project = localStorage.getItem('project') || '';
+const qp = () => project ? `?project_id=${project}` : '';
+
+async function boot() {
+  META = await api('GET', '/api/meta');
+  await refreshBase();
+  window.addEventListener('hashchange', route);
+  route();
+}
+async function refreshBase() {
+  PROJECTS = await api('GET', '/api/projects');
+  WORKERS = await api('GET', '/api/workers');
+  if (project && !PROJECTS.find(p => String(p.id) === project)) project = '';
+  if (!project && PROJECTS.length) project = String(PROJECTS[0].id);
+  localStorage.setItem('project', project);
+}
+function renderNav(active) {
+  const links = [['dashboard','Dashboard'],['tasks','Tasks'],['workers','Workers'],['projects','Projects & Memory'],['backup','Backup']];
+  $('#nav').innerHTML = `<div class="brand">AXIOM · WORKER HUB</div>
+   <select id="projSel" title="Active project">${PROJECTS.map(p => `<option value="${p.id}" ${String(p.id)===project?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+   <div style="height:10px"></div>
+   ${links.map(([h,l]) => `<a href="#/${h}" class="${active===h?'on':''}">${l}</a>`).join('')}
+   <div class="sp"></div>
+   <a href="#" data-act="theme">◐ Light / Dark</a>`;
+  $('#projSel').onchange = e => { project = e.target.value; localStorage.setItem('project', project); route(); };
+}
+async function route() {
+  const h = (location.hash || '#/dashboard').slice(2).split('/');
+  const view = h[0] || 'dashboard';
+  renderNav(view === 'task' ? 'tasks' : view === 'project' ? 'projects' : view);
+  try {
+    const fn = {dashboard: vDashboard, tasks: vTasks, task: vTask, workers: vWorkers, projects: vProjects, project: vProject, backup: vBackup}[view] || vDashboard;
+    $('#main').innerHTML = await fn(h[1]);
+    if (view === 'task') afterTask();
+  } catch (e) { $('#main').innerHTML = `<h1>Error</h1><p class="mut">${esc(e.message)}</p>`; }
+}
+const reload = () => route();
+
+/* ---------------- Dashboard ---------------- */
+async function vDashboard() {
+  const d = await api('GET', '/api/dashboard' + qp());
+  const n = s => d.by_status[s] || 0;
+  const active = n('Assigned') + n('Working') + n('Submitted') + n('Review');
+  const tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
+  return `<h1>Dashboard</h1><p class="mut">Command center for your AI workers. Worker availability is set by you — the hub cannot see inside external apps.</p>
+  <div class="tiles" style="margin-top:20px">
+   ${tile(d.workers_active + ' / ' + d.workers_total, 'workers active')}
+   ${tile(active, 'active tasks')}
+   ${tile(d.pending_submissions, 'pending submissions')}
+   ${tile(d.pending_reviews, 'pending reviews')}
+   ${tile(n('Owner Approval'), 'awaiting your approval')}
+   ${tile(n('Completed'), 'completed')}
+   ${tile(n('Blocked'), 'blocked')}
+   ${tile(n('Backlog'), 'backlog')}
+  </div>
+  <h2>Current assignments</h2>
+  <div class="card list">${d.open_assignments.map(a => `<div class="row sb"><span><b>${esc(a.worker_name)}</b> · ${esc(a.kind)} · <a href="#/task/${a.task_id}">${esc(a.task_title)}</a></span>${badge(a.status)}</div>`).join('') || '<span class="mut">Nothing waiting. Open a task and hand it off.</span>'}</div>
+  <h2>Owner approval queue</h2>
+  <div class="card list">${d.approvals.map(t => `<div class="row sb"><a href="#/task/${t.id}">${esc(t.title)}</a>${badge('Owner Approval')}</div>`).join('') || '<span class="mut">Nothing to approve.</span>'}</div>
+  ${d.blocked.length ? `<h2>Blocked</h2><div class="card list">${d.blocked.map(t => `<div><a href="#/task/${t.id}">${esc(t.title)}</a></div>`).join('')}</div>` : ''}
+  <h2>Recent activity</h2>
+  <div class="card list">${d.activity.map(a => `<div class="small"><span class="mut">${fmt(a.ts)}</span> &nbsp; ${esc(a.text)}</div>`).join('') || '<span class="mut">No activity yet.</span>'}</div>`;
+}
+
+/* ---------------- Tasks ---------------- */
+let taskFilter = 'All';
+async function vTasks() {
+  const tasks = await api('GET', '/api/tasks' + qp());
+  const shown = tasks.filter(t => taskFilter === 'All' || t.status === taskFilter);
+  return `<div class="row sb"><h1>Tasks</h1></div>
+  <details class="card" ${tasks.length ? '' : 'open'}><summary style="color:var(--fg);font-weight:600">+ New task</summary>
+   <form data-form="newTask">
+    <label>Title</label><input name="title" required placeholder="e.g. Research and propose improvements to the orchestration engine">
+    <label>Description / instructions</label><textarea name="description" rows="5"></textarea>
+    <div class="row"><div><label>Priority</label><select name="priority">${META.priorities.map(p => `<option ${p==='Normal'?'selected':''}>${p}</option>`).join('')}</select></div></div>
+    <p><button class="pri">Create task</button></p>
+   </form></details>
+  <div class="row filters" style="margin:18px 0">${['All', ...META.statuses].map(s => `<button class="${taskFilter===s?'on':''}" data-act="filter" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+  <div class="grid">${shown.map(t => `<div class="card link" data-go="#/task/${t.id}">
+    <div class="row sb"><span class="small mut">${esc(t.priority)}${t.parent_id ? ' · subtask' : ''}</span>${badge(t.status)}</div>
+    <h3 style="margin-top:8px">${esc(t.title)}</h3>
+    <div class="small mut">${t.open_assignments} waiting · ${t.submissions} submission(s)${t.subtasks ? ` · ${t.subtasks} subtask(s)` : ''}</div></div>`).join('') || '<p class="mut">No tasks here.</p>'}</div>`;
+}
+
+/* ---------------- Task detail ---------------- */
+let T = null, reviewTarget = '';
+async function vTask(id) {
+  T = await api('GET', '/api/tasks/' + id);
+  const wname = id => (WORKERS.find(w => w.id === id) || {}).name || '?';
+  const work = T.submissions.filter(s => s.kind === 'work');
+  const cons = T.submissions.filter(s => s.kind === 'consolidate');
+  const reviews = s => T.submissions.filter(r => r.kind === 'review' && r.review_of === s.id);
+  const activeWorkers = WORKERS.filter(w => w.active);
+  return `<p class="small"><a href="#/tasks">← Tasks</a>${T.parent ? ` · subtask of <a href="#/task/${T.parent.id}">${esc(T.parent.title)}</a>` : ''}</p>
+  <div class="row sb"><h1>${esc(T.title)}</h1>${badge(T.status)}</div>
+  <p class="mut small">${esc(T.project.name)} · priority ${esc(T.priority)} · updated ${fmt(T.updated)}</p>
+  <div class="card"><div class="body">${esc(T.description) || '<span class="mut">No description.</span>'}</div>
+   <details><summary>Edit task / status</summary>
+   <form data-form="editTask">
+    <label>Title</label><input name="title" value="${esc(T.title)}">
+    <label>Description</label><textarea name="description" rows="5">${esc(T.description)}</textarea>
+    <div class="row"><div><label>Priority</label><select name="priority">${META.priorities.map(p => `<option ${p===T.priority?'selected':''}>${p}</option>`).join('')}</select></div>
+    <div><label>Status (Completed only via owner decision)</label><select name="status">${META.statuses.filter(s => s !== 'Completed' || T.status === 'Completed').map(s => `<option ${s===T.status?'selected':''}>${s}</option>`).join('')}</select></div></div>
+    <p class="row"><button class="pri">Save</button><button type="button" class="danger" data-act="delTask">Delete task…</button></p>
+   </form></details></div>
+
+  <h2>Attachments</h2>
+  <div class="card">${T.attachments.map(a => `<div class="row sb small"><a href="/api/attachments/${a.id}">${esc(a.filename)}</a><span class="mut">${(a.size/1024).toFixed(1)} KB · ${a.is_text ? 'text — included in prompts' : 'binary — not included in prompts'} <button class="ghost" data-act="delAtt" data-id="${a.id}">×</button></span></div>`).join('') || '<span class="mut small">None.</span>'}
+   <p><input type="file" id="attFile"></p></div>
+
+  <h2>Subtasks</h2>
+  <div class="card">${T.subtasks.map(s => `<div class="row sb"><a href="#/task/${s.id}">${esc(s.title)}</a>${badge(s.status)}</div>`).join('')}
+   <form data-form="newSub" class="row" style="margin-top:8px"><input name="title" placeholder="New subtask title" required><button class="pri" style="flex:0">Add</button></form></div>
+
+  <h2>1 · Hand off to workers</h2>
+  <form class="card" data-form="assign">
+   <div class="row"><div><label>Type</label><select name="kind" id="kindSel">
+     <option value="work">Solve independently</option>
+     <option value="review">Review a submission</option>
+     <option value="consolidate">Consolidate all submissions</option></select></div>
+    <div id="reviewBox" style="display:none"><label>Submission to review</label><select name="review_of">${work.concat(cons).map(s => `<option value="${s.id}" ${String(s.id)===String(reviewTarget)?'selected':''}>#${s.id} by ${esc(s.worker_name)}</option>`).join('')}</select></div></div>
+   <label>Workers (active only)</label>
+   ${activeWorkers.map(w => `<label class="inline"><input type="checkbox" name="w" value="${w.id}"> ${esc(w.name)} <span class="mut small">· ${esc(META.providers[w.provider].label)} · ${esc(w.roles)}</span></label>`).join('') || '<span class="mut">No active workers. Activate some on the Workers page.</span>'}
+   <label>Context to include (suggested items pre-checked; nothing else is sent)</label>
+   <label class="inline"><input type="checkbox" checked disabled> Project instructions (always)</label>
+   ${T.memory.map(m => `<label class="inline"><input type="checkbox" name="m" value="${m.id}" ${T.suggested_memory.includes(m.id)?'checked':''}> ${esc(m.title)} <span class="mut small">[${esc(m.kind)}]</span></label>`).join('') || '<span class="mut small">No project memory yet.</span>'}
+   <label>Extra note for this hand-off (optional)</label><textarea name="extra" rows="2"></textarea>
+   <p class="small mut">Prompts are text you paste yourself into the chosen AI app. Check them for anything private before sending.</p>
+   <button class="pri">Generate prompts</button>
+  </form>
+
+  <h2>2 · Prompts & responses</h2>
+  ${T.assignments.map(a => `<div class="card" style="margin-bottom:12px">
+    <div class="row sb"><span><b>${esc(a.worker_name)}</b> <span class="mut small">· ${esc(META.providers[a.provider].label)} · ${esc(a.kind)}${a.review_of ? ' of #' + a.review_of : ''}</span></span>${badge(a.status)}</div>
+    ${a.status === 'submitted' || a.status === 'cancelled' ? `<details><summary>Show prompt</summary><pre>${esc(a.prompt)}</pre></details>` : `
+    <textarea readonly rows="8" id="pr${a.id}" style="margin-top:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px">${esc(a.prompt)}</textarea>
+    <div class="row" style="margin:8px 0">
+     <button class="pri" data-act="copy" data-id="${a.id}">Copy prompt</button>
+     <a class="btn" target="_blank" rel="noopener" href="${esc(a.worker_url || META.providers[a.provider].url)}" data-act="open" data-id="${a.id}">Open ${esc(META.providers[a.provider].label)} ↗</a>
+     <button class="ghost" data-act="sent" data-id="${a.id}">Mark as sent</button>
+     <button class="ghost danger" data-act="cancelA" data-id="${a.id}">Cancel</button></div>
+    <form data-form="submit" data-id="${a.id}">
+     <label>Paste the AI's response</label><textarea name="body" rows="6" required></textarea>
+     <details><summary>Optional: sources / advantages / disadvantages (auto-filled from headings when present)</summary>
+      <label>Sources</label><textarea name="sources" rows="2"></textarea>
+      <label>Advantages</label><textarea name="pros" rows="2"></textarea>
+      <label>Disadvantages</label><textarea name="cons" rows="2"></textarea></details>
+     <p><button class="pri">Save response</button></p></form>`}
+   </div>`).join('') || '<p class="mut">No prompts generated yet.</p>'}
+
+  <h2>3 · Compare submissions</h2>
+  ${work.length ? `<div class="cols">${work.map(s => `<div class="card">
+    <div class="row sb"><b>#${s.id} · ${esc(s.worker_name)}</b><span class="small mut">${esc(META.providers[s.provider].label)}</span></div>
+    <details open><summary>Proposed solution</summary><div class="body">${esc(s.body)}</div></details>
+    ${[['Advantages',s.pros],['Disadvantages',s.cons],['Conflicting recommendations',s.conflicts],['Missing evidence / assumptions',s.missing],['Supporting sources',s.sources]].map(([l,v]) => `<h2 style="margin:14px 0 4px">${l}</h2><div class="body small">${esc(v) || '<span class="mut">—</span>'}</div>`).join('')}
+    <details><summary>Annotate (conflicts, missing evidence, etc.)</summary>
+     <form data-form="annotate" data-id="${s.id}">
+      ${['pros','cons','conflicts','missing','sources'].map(f => `<label>${f}</label><textarea name="${f}" rows="2">${esc(s[f])}</textarea>`).join('')}
+      <p><button>Save notes</button></p></form></details>
+    <h2 style="margin:14px 0 4px">Reviews</h2>
+    ${reviews(s).map(r => `<details><summary>Review by ${esc(r.worker_name)}</summary><div class="body">${esc(r.body)}</div></details>`).join('') || '<div class="small mut">No reviews yet.</div>'}
+    <p class="row"><button class="ghost" data-act="reqReview" data-id="${s.id}">Request peer review</button></p>
+   </div>`).join('')}</div>` : '<p class="mut">No submissions yet.</p>'}
+  ${cons.length ? `<h2>Consolidated solution(s)</h2><div class="cols">${cons.map(s => `<div class="card"><b>#${s.id} · ${esc(s.worker_name)}</b><div class="body" style="margin-top:8px">${esc(s.body)}</div></div>`).join('')}</div>` : ''}
+
+  <h2>4 · Owner decision</h2>
+  <form class="card" data-form="decide">
+   ${T.decision ? `<p class="small">Last decision: <b>${esc(T.decision)}</b>${T.decision_notes ? ' — ' + esc(T.decision_notes) : ''}</p>` : ''}
+   <label>Final solution (optional)</label>
+   <select name="final_submission_id"><option value="">— none selected —</option>${work.concat(cons).map(s => `<option value="${s.id}" ${T.final_submission_id===s.id?'selected':''}>#${s.id} by ${esc(s.worker_name)} (${s.kind})</option>`).join('')}</select>
+   <label>Notes</label><textarea name="notes" rows="2"></textarea>
+   <p class="row"><button class="pri" data-d="approve">Approve → Completed</button><button data-d="revise">Request revisions</button><button class="danger" data-d="reject">Reject</button></p>
+  </form>
+
+  <h2>Discussion</h2>
+  <div class="card">${T.comments.map(c => `<div style="margin-bottom:10px"><span class="small mut">${esc(c.author)} · ${fmt(c.created)}</span><div class="body">${esc(c.body)}</div></div>`).join('')}
+   <form data-form="comment"><textarea name="body" rows="2" placeholder="Add a note…" required></textarea><p><button>Post</button></p></form></div>
+
+  <h2>History</h2>
+  <div class="card list">${T.activity.map(a => `<div class="small"><span class="mut">${fmt(a.ts)}</span> &nbsp; ${esc(a.text)}</div>`).join('')}</div>`;
+}
+function afterTask() {
+  const k = $('#kindSel'); if (!k) return;
+  const sync = () => { $('#reviewBox').style.display = k.value === 'review' ? 'block' : 'none'; };
+  k.onchange = sync;
+  if (reviewTarget) { k.value = 'review'; }
+  sync();
+  const f = $('#attFile');
+  if (f) f.onchange = () => {
+    const file = f.files[0]; if (!file) return;
+    const rd = new FileReader();
+    rd.onload = async () => {
+      try { await api('POST', `/api/tasks/${T.id}/attachments`, {filename: file.name, data: rd.result.split(',')[1]}); toast('Attached'); reload(); }
+      catch (e) { toast(e.message); }
+    };
+    rd.readAsDataURL(file);
+  };
+}
+
+/* ---------------- Workers ---------------- */
+async function vWorkers() {
+  await refreshBase();
+  const prov = META.providers;
+  return `<h1>Workers</h1>
+  <p class="mut">Register as many accounts per provider as you like. “Availability” is a note you set yourself — the hub cannot monitor external apps.</p>
+  <details class="card"><summary style="color:var(--fg);font-weight:600">+ Add worker / account</summary>
+   <form data-form="newWorker">
+    <div class="row"><div><label>Provider</label><select name="provider">${Object.entries(prov).map(([k,p]) => `<option value="${k}">${esc(p.label)}</option>`).join('')}</select></div>
+    <div><label>Name / account label (private, stays local)</label><input name="name" required placeholder="e.g. Claude #2"></div></div>
+    <label>Roles</label><input name="roles"><label>Capabilities</label><input name="capabilities" placeholder="e.g. long context, web search, code">
+    <label>Worker-specific instructions (added to every prompt for this worker)</label><textarea name="instructions" rows="2"></textarea>
+    <p><button class="pri">Add worker</button></p></form></details>
+  <div style="height:16px"></div>
+  ${WORKERS.map(w => `<div class="card" style="margin-bottom:12px">
+    <div class="row sb"><span><span class="dot ${w.active?'on':''}"></span><b>${esc(w.name)}</b> <span class="mut small">· ${esc(prov[w.provider].label)} · ${w.assignment_count} assignment(s)</span></span>
+     <span class="row"><span class="badge b-awaiting">availability: ${esc(w.availability)} (manual)</span>${w.active ? '' : '<span class="badge b-cancelled">inactive</span>'}</span></div>
+    <details><summary>Edit</summary>
+    <form data-form="editWorker" data-id="${w.id}">
+     <div class="row"><div><label>Name</label><input name="name" value="${esc(w.name)}"></div>
+     <div><label>Availability (manual)</label><select name="availability">${META.availability.map(a => `<option ${a===w.availability?'selected':''}>${a}</option>`).join('')}</select></div></div>
+     <label>Roles</label><input name="roles" value="${esc(w.roles)}">
+     <label>Capabilities</label><input name="capabilities" value="${esc(w.capabilities)}">
+     <label>Worker-specific instructions</label><textarea name="instructions" rows="2">${esc(w.instructions)}</textarea>
+     <label>Open-link override (default: ${esc(prov[w.provider].url)} — not auto-verified)</label><input name="url" value="${esc(w.url)}" placeholder="https://…">
+     <label class="inline"><input type="checkbox" name="active" ${w.active?'checked':''}> Active (can receive assignments)</label>
+     <p class="row"><button class="pri">Save</button><button type="button" class="ghost" data-act="history" data-id="${w.id}">History</button><button type="button" class="danger" data-act="delWorker" data-id="${w.id}">Delete…</button></p>
+    </form><div id="hist${w.id}"></div></details></div>`).join('')}`;
+}
+
+/* ---------------- Projects & memory ---------------- */
+async function vProjects() {
+  await refreshBase();
+  return `<h1>Projects & Memory</h1>
+  <details class="card"><summary style="color:var(--fg);font-weight:600">+ New project</summary>
+   <form data-form="newProject"><label>Name</label><input name="name" required>
+   <label>Project instructions (included in every prompt for this project)</label><textarea name="instructions" rows="5"></textarea>
+   <p><button class="pri">Create project</button></p></form></details>
+  <div class="grid" style="margin-top:16px">${PROJECTS.map(p => `<div class="card link" data-go="#/project/${p.id}"><h3>${esc(p.name)}</h3><div class="small mut">${p.task_count} task(s) · ${p.memory_count} memory item(s)</div></div>`).join('')}</div>`;
+}
+async function vProject(id) {
+  const [p, mem] = [PROJECTS.find(x => String(x.id) === id), await api('GET', `/api/projects/${id}/memory`)];
+  if (!p) return '<p>Project not found.</p>';
+  return `<p class="small"><a href="#/projects">← Projects</a></p><h1>${esc(p.name)}</h1>
+  <form class="card" data-form="editProject" data-id="${p.id}">
+   <label>Name</label><input name="name" value="${esc(p.name)}">
+   <label>Project instructions (private; stored only in your local database)</label><textarea name="instructions" rows="9">${esc(p.instructions)}</textarea>
+   <p class="row"><button class="pri">Save</button><button type="button" class="danger" data-act="delProject" data-id="${p.id}">Delete project…</button></p></form>
+  <h2>Shared project memory</h2>
+  <details class="card"><summary style="color:var(--fg);font-weight:600">+ Add memory item</summary>
+   <form data-form="newMemory" data-id="${p.id}">
+    <div class="row"><div><label>Type</label><select name="kind">${META.memory_kinds.map(k => `<option>${k}</option>`).join('')}</select></div>
+    <div><label>Title</label><input name="title" required></div></div>
+    <label>Content</label><textarea name="body" rows="5"></textarea><p><button class="pri">Add</button></p></form></details>
+  <div style="height:12px"></div>
+  ${mem.map(m => `<div class="card" style="margin-bottom:10px"><div class="row sb"><b>${esc(m.title)}</b><span class="badge b-awaiting">${esc(m.kind)}</span></div>
+    <div class="body small" style="margin-top:6px">${esc(m.body.length > 400 ? m.body.slice(0,400) + '…' : m.body)}</div>
+    <details><summary>Edit</summary><form data-form="editMemory" data-id="${m.id}" data-pid="${p.id}">
+     <div class="row"><div><label>Type</label><select name="kind">${META.memory_kinds.map(k => `<option ${k===m.kind?'selected':''}>${k}</option>`).join('')}</select></div><div><label>Title</label><input name="title" value="${esc(m.title)}"></div></div>
+     <label>Content</label><textarea name="body" rows="5">${esc(m.body)}</textarea>
+     <p class="row"><button class="pri">Save</button><button type="button" class="danger" data-act="delMemory" data-id="${m.id}">Delete…</button></p></form></details></div>`).join('') || '<p class="mut">No memory yet. Add decisions, research, architecture notes — only the relevant ones are put in each prompt.</p>'}`;
+}
+
+/* ---------------- Backup ---------------- */
+async function vBackup() {
+  const list = await api('GET', '/api/backups');
+  return `<h1>Backup</h1>
+  <p class="mut">All your data is stored locally in:</p><pre class="card">${esc(META.data_dir)}</pre>
+  <div class="row" style="margin:16px 0"><a class="btn pri" href="/api/backup" style="background:var(--fg);color:var(--bg)">Download backup (.zip)</a><button data-act="saveBackup">Save backup in data folder</button></div>
+  <h2>Backups in data folder</h2><div class="card list">${list.map(b => `<div class="row sb"><span>${esc(b.name)}</span><span class="mut small">${(b.size/1024).toFixed(0)} KB</span></div>`).join('') || '<span class="mut">None.</span>'}</div>
+  <h2>Restore</h2>
+  <p class="small">Restore is done from the terminal so it can never happen by accident. Stop the hub first, then run:</p>
+  <pre class="card">python3 server.py restore path/to/backup.zip</pre>`;
+}
+
+/* ---------------- events ---------------- */
+const fd = f => Object.fromEntries(new FormData(f).entries());
+document.addEventListener('click', async e => {
+  const go = e.target.closest('[data-go]'); if (go && !e.target.closest('a,button')) { location.hash = go.dataset.go; return; }
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  try {
+    if (act === 'theme') { e.preventDefault(); const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('theme', t); }
+    else if (act === 'filter') { taskFilter = el.dataset.v; reload(); }
+    else if (act === 'copy') {
+      const ok = await copyText($('#pr' + id).value);
+      toast(ok ? 'Prompt copied' : 'Copy blocked by browser — select the text in the box and copy manually');
+      if (ok) await api('PUT', '/api/assignments/' + id, {status: 'sent'}).catch(() => {});
+    }
+    else if (act === 'open') { /* link navigates itself */ }
+    else if (act === 'sent') { await api('PUT', '/api/assignments/' + id, {status: 'sent'}); reload(); }
+    else if (act === 'cancelA') { if (confirm('Cancel this assignment?')) { await api('PUT', '/api/assignments/' + id, {status: 'cancelled'}); reload(); } }
+    else if (act === 'reqReview') { reviewTarget = id; reload(); setTimeout(() => $('#kindSel')?.scrollIntoView({behavior: 'smooth', block: 'center'}), 250); }
+    else if (act === 'delTask') { if (confirm('Delete this task and all its prompts, responses and attachments? This cannot be undone.')) { await api('DELETE', `/api/tasks/${T.id}?confirm=yes`); location.hash = '#/tasks'; } }
+    else if (act === 'delAtt') { if (confirm('Delete this attachment?')) { await api('DELETE', `/api/attachments/${id}?confirm=yes`); reload(); } }
+    else if (act === 'delWorker') { if (confirm('Delete this worker and all of its assignments and submissions? This cannot be undone. (Tip: deactivate instead.)')) { await api('DELETE', `/api/workers/${id}?confirm=yes`); reload(); } }
+    else if (act === 'delProject') { if (confirm('Delete this project with ALL its tasks, responses and memory? This cannot be undone. Consider a backup first.')) { await api('DELETE', `/api/projects/${id}?confirm=yes`); await refreshBase(); location.hash = '#/projects'; } }
+    else if (act === 'delMemory') { if (confirm('Delete this memory item?')) { await api('DELETE', `/api/memory/${id}?confirm=yes`); reload(); } }
+    else if (act === 'history') {
+      const h = await api('GET', `/api/workers/${id}/history`);
+      $('#hist' + id).innerHTML = `<div class="card list" style="margin-top:8px">${h.assignments.map(a => `<div class="small"><a href="#/task/${a.task_id}">${esc(a.task_title)}</a> · ${esc(a.kind)} · ${esc(a.status)} · <span class="mut">${fmt(a.created)}</span></div>`).join('') || '<span class="mut small">No assignments yet.</span>'}</div>`;
+    }
+    else if (act === 'saveBackup') { const r = await api('POST', '/api/backup'); toast('Saved: ' + r.path); reload(); }
+  } catch (err) { toast(err.message); }
+});
+document.addEventListener('submit', async e => {
+  const f = e.target.closest('[data-form]'); if (!f) return;
+  e.preventDefault();
+  const kind = f.dataset.form, id = f.dataset.id, v = fd(f);
+  try {
+    if (kind === 'newTask') { const r = await api('POST', '/api/tasks', {...v, project_id: +project}); location.hash = '#/task/' + r.id; }
+    else if (kind === 'newSub') { const r = await api('POST', '/api/tasks', {...v, project_id: T.project_id, parent_id: T.id}); location.hash = '#/task/' + r.id; }
+    else if (kind === 'editTask') { await api('PUT', '/api/tasks/' + T.id, v); toast('Saved'); reload(); }
+    else if (kind === 'assign') {
+      const workers = [...f.querySelectorAll('input[name=w]:checked')].map(x => +x.value);
+      const memory_ids = [...f.querySelectorAll('input[name=m]:checked')].map(x => +x.value);
+      await api('POST', `/api/tasks/${T.id}/assign`, {kind: v.kind, worker_ids: workers, memory_ids, review_of: v.review_of ? +v.review_of : null, extra: v.extra});
+      reviewTarget = ''; toast('Prompts generated'); reload();
+    }
+    else if (kind === 'submit') { await api('POST', `/api/assignments/${id}/submit`, v); toast('Response saved'); reload(); }
+    else if (kind === 'annotate') { await api('PUT', '/api/submissions/' + id, v); toast('Saved'); reload(); }
+    else if (kind === 'comment') { await api('POST', `/api/tasks/${T.id}/comments`, v); reload(); }
+    else if (kind === 'decide') {
+      const d = e.submitter?.dataset.d; if (!d) return;
+      if (d === 'approve' && !confirm('Approve and mark this task Completed?')) return;
+      await api('POST', `/api/tasks/${T.id}/decision`, {decision: d, notes: v.notes, final_submission_id: v.final_submission_id ? +v.final_submission_id : null});
+      toast('Decision recorded'); reload();
+    }
+    else if (kind === 'newWorker') { await api('POST', '/api/workers', v); toast('Worker added'); await refreshBase(); reload(); }
+    else if (kind === 'editWorker') { await api('PUT', '/api/workers/' + id, {...v, active: !!v.active}); toast('Saved'); await refreshBase(); reload(); }
+    else if (kind === 'newProject') { const r = await api('POST', '/api/projects', v); project = String(r.id); localStorage.setItem('project', project); await refreshBase(); location.hash = '#/project/' + r.id; }
+    else if (kind === 'editProject') { await api('PUT', '/api/projects/' + id, v); toast('Saved'); await refreshBase(); reload(); }
+    else if (kind === 'newMemory') { await api('POST', `/api/projects/${id}/memory`, v); reload(); }
+    else if (kind === 'editMemory') { await api('PUT', '/api/memory/' + id, v); toast('Saved'); reload(); }
+  } catch (err) { toast(err.message); }
+});
+boot();
+</script>
+</body>
+</html>
